@@ -4,7 +4,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 #include "Shader.hpp"
-#include "QuadMesh.hpp"
+#include "CubeMesh.hpp"
 
 void mouseCallback(GLFWwindow* window, double xPosIn, double yPosIn);
 void processInput(GLFWwindow* window);
@@ -54,10 +54,11 @@ int main() {
     }
 
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
 
     {
-        QuadMesh mesh;
-        Shader shader{ "shaders/quad.vert", "shaders/quad.frag" };
+        CubeMesh mesh;
+        Shader shader{ "shaders/cube.vert", "shaders/cube.frag" };
 
         while (not glfwWindowShouldClose(window)) {
             auto currentTime = static_cast<float>(glfwGetTime());

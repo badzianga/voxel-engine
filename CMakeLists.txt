@@ -32,7 +32,8 @@ set(CMAKE_CXX_STANDARD 20)
 
 add_executable(MineCppraft main.cpp
         src/Shader.cpp
-        src/QuadMesh.cpp)
+        src/QuadMesh.cpp
+        src/CubeMesh.cpp)
 
 add_dependencies(MineCppraft glfw)
 add_dependencies(MineCppraft glad)
@@ -43,3 +44,6 @@ target_link_libraries(MineCppraft glad glfw glm)
 
 configure_file(shaders/quad.vert ${CMAKE_CURRENT_BINARY_DIR}/shaders/quad.vert COPYONLY)
 configure_file(shaders/quad.frag ${CMAKE_CURRENT_BINARY_DIR}/shaders/quad.frag COPYONLY)
+
+configure_file(shaders/cube.vert ${CMAKE_CURRENT_BINARY_DIR}/shaders/cube.vert COPYONLY)
+configure_file(shaders/cube.frag ${CMAKE_CURRENT_BINARY_DIR}/shaders/cube.frag COPYONLY)
