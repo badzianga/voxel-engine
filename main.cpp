@@ -5,6 +5,7 @@
 #include <iostream>
 #include "Shader.hpp"
 #include "CubeMesh.hpp"
+#include "DebugWindow.hpp"
 
 void mouseCallback(GLFWwindow* window, double xPosIn, double yPosIn);
 void processInput(GLFWwindow* window);
@@ -12,7 +13,7 @@ void processInput(GLFWwindow* window);
 constexpr uint32_t SCR_WIDTH = 1280;
 constexpr uint32_t SCR_HEIGHT = 720;
 
-constexpr float CAMERA_SPEED = 8.f;
+constexpr float CAMERA_SPEED = 2.f;
 
 glm::vec3 cameraPos = glm::vec3(0.f, 0.f, 3.f);
 glm::vec3 cameraFront = glm::vec3(0.f, 0.f, -1.f);
@@ -60,6 +61,9 @@ int main() {
         CubeMesh mesh;
         Shader shader{ "shaders/cube.vert", "shaders/cube.frag" };
 
+        DebugWindow::init();
+        DebugWindow debugWindow{ window };
+
         while (not glfwWindowShouldClose(window)) {
             auto currentTime = static_cast<float>(glfwGetTime());
             deltaTime = currentTime - lastTime;
@@ -80,6 +84,8 @@ int main() {
             shader.setMat4("u_model", model);
 
             mesh.render();
+
+            debugWindow.display(cameraPos, cameraFront);
 
             glfwSwapBuffers(window);
             glfwPollEvents();
