@@ -6,6 +6,7 @@
 #include "Shader.hpp"
 #include "ChunkMesh.hpp"
 #include "DebugWindow.hpp"
+#include "Texture.hpp"
 
 void mouseCallback(GLFWwindow* window, double xPosIn, double yPosIn);
 void processInput(GLFWwindow* window);
@@ -60,6 +61,7 @@ int main() {
     {
         ChunkMesh mesh;
         Shader shader{ "shaders/chunk.vert", "shaders/chunk.frag" };
+        Texture texture{ "assets/frame.png" };
 
         DebugWindow::init();
         DebugWindow debugWindow{ window };
@@ -82,6 +84,7 @@ int main() {
             shader.setMat4("u_projection", projection);
             shader.setMat4("u_view", view);
             shader.setMat4("u_model", model);
+            texture.use();
 
             mesh.render();
 

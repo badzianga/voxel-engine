@@ -5,9 +5,17 @@ in vec2 vertexUV;
 
 out vec4 fragmentColor;
 
+uniform sampler2D u_texture;
+
 const vec3 gamma = vec3(2.2f);
 const vec3 inverseGamma = 1.f / gamma;
 
 void main() {
-    fragmentColor = vec4(vertexColor, 1.f);
+        vec3 textureColor = texture(u_texture, vertexUV).rgb;
+
+        textureColor = pow(textureColor, gamma);
+        textureColor.rgb *= vertexColor.rgb;
+        textureColor = pow(textureColor, inverseGamma);
+
+    fragmentColor = vec4(textureColor, 1.f);
 }
