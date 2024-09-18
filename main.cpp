@@ -4,7 +4,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 #include "Shader.hpp"
-#include "CubeMesh.hpp"
+#include "ChunkMesh.hpp"
 #include "DebugWindow.hpp"
 
 void mouseCallback(GLFWwindow* window, double xPosIn, double yPosIn);
@@ -13,7 +13,7 @@ void processInput(GLFWwindow* window);
 constexpr uint32_t SCR_WIDTH = 1280;
 constexpr uint32_t SCR_HEIGHT = 720;
 
-constexpr float CAMERA_SPEED = 2.f;
+constexpr float CAMERA_SPEED = 8.f;
 
 glm::vec3 cameraPos = glm::vec3(0.f, 0.f, 3.f);
 glm::vec3 cameraFront = glm::vec3(0.f, 0.f, -1.f);
@@ -58,8 +58,8 @@ int main() {
     glEnable(GL_CULL_FACE);
 
     {
-        CubeMesh mesh;
-        Shader shader{ "shaders/cube.vert", "shaders/cube.frag" };
+        ChunkMesh mesh;
+        Shader shader{ "shaders/chunk.vert", "shaders/chunk.frag" };
 
         DebugWindow::init();
         DebugWindow debugWindow{ window };

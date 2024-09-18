@@ -60,6 +60,7 @@ add_executable(MineCppraft main.cpp
         src/Shader.cpp
         src/QuadMesh.cpp
         src/CubeMesh.cpp
+        src/ChunkMesh.cpp
         src/DebugWindow.cpp)
 
 add_dependencies(MineCppraft glfw)
@@ -74,3 +75,6 @@ configure_file(shaders/quad.frag ${CMAKE_CURRENT_BINARY_DIR}/shaders/quad.frag C
 
 configure_file(shaders/cube.vert ${CMAKE_CURRENT_BINARY_DIR}/shaders/cube.vert COPYONLY)
 configure_file(shaders/cube.frag ${CMAKE_CURRENT_BINARY_DIR}/shaders/cube.frag COPYONLY)
+
+configure_file(shaders/chunk.vert ${CMAKE_CURRENT_BINARY_DIR}/shaders/chunk.vert COPYONLY)
+configure_file(shaders/chunk.frag ${CMAKE_CURRENT_BINARY_DIR}/shaders/chunk.frag COPYONLY)
