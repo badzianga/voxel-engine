@@ -44,7 +44,7 @@ int main() {
     glfwMakeContextCurrent(window);
     glfwSetCursorPosCallback(window, mouseCallback);
 
-    glfwSwapInterval(0);
+    glfwSwapInterval(1);
 
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
@@ -59,7 +59,7 @@ int main() {
     glEnable(GL_CULL_FACE);
 
     {
-        Chunk mesh;
+        Chunk mesh{ { 0, 0 } };
         Shader shader{ "shaders/chunk.vert", "shaders/chunk.frag" };
         Texture texture{ "assets/frame.png" };
 

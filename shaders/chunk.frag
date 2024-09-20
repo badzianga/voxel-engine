@@ -11,11 +11,11 @@ const vec3 gamma = vec3(2.2f);
 const vec3 inverseGamma = 1.f / gamma;
 
 void main() {
-        vec3 textureColor = texture(u_texture, vertexUV).rgb;
+    vec3 textureColor = texture(u_texture, vertexUV).rgb;
 
-        textureColor = pow(textureColor, gamma);
-        textureColor.rgb *= vertexColor.rgb;
-        textureColor = pow(textureColor, inverseGamma);
+    textureColor = pow(textureColor, gamma);
+    textureColor.rgb *= vertexColor.rgb;
+    textureColor = pow(textureColor, inverseGamma);
 
     fragmentColor = vec4(textureColor, 1.f);
 }
