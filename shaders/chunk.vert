@@ -1,6 +1,6 @@
 #version 460 core
 layout (location = 0) in ivec3 a_position;
-layout (location = 1) in int a_voxelId;
+layout (location = 1) in int a_blockId;
 layout (location = 2) in int a_faceId;
 
 uniform mat4 u_model;
@@ -30,6 +30,6 @@ void main() {
     int uvIndex = gl_VertexID % 6 + (a_faceId & 1) * 6;
     vertexUV = uvCoords[uvIndices[uvIndex]];
 
-    vertexColor = hash31(a_voxelId);
+    vertexColor = hash31(a_blockId);
     gl_Position = u_projection * u_view * u_model * vec4(a_position, 1.f);
 }

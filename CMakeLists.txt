@@ -62,7 +62,8 @@ add_executable(MineCppraft main.cpp
         src/CubeMesh.cpp
         src/Chunk.cpp
         src/DebugWindow.cpp
-        src/Texture.cpp)
+        src/Texture.cpp
+        src/World.cpp)
 
 add_dependencies(MineCppraft glfw)
 add_dependencies(MineCppraft glad)

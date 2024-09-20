@@ -4,19 +4,21 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 #include "Shader.hpp"
-#include "Chunk.hpp"
 #include "DebugWindow.hpp"
 #include "Texture.hpp"
+#include "World.hpp"
 
 void mouseCallback(GLFWwindow* window, double xPosIn, double yPosIn);
 void processInput(GLFWwindow* window);
 
+constexpr bool vSyncEnabled = false;
+
 constexpr uint32_t SCR_WIDTH = 1280;
 constexpr uint32_t SCR_HEIGHT = 720;
 
-constexpr float CAMERA_SPEED = 8.f;
+constexpr float CAMERA_SPEED = 16.f;
 
-glm::vec3 cameraPos = glm::vec3(0.f, 0.f, 3.f);
+glm::vec3 cameraPos = World::getCenter();
 glm::vec3 cameraFront = glm::vec3(0.f, 0.f, -1.f);
 const glm::vec3 cameraUp = glm::vec3(0.f, 1.f, 0.f);
 
@@ -44,7 +46,7 @@ int main() {
     glfwMakeContextCurrent(window);
     glfwSetCursorPosCallback(window, mouseCallback);
 
-    glfwSwapInterval(1);
+    glfwSwapInterval(vSyncEnabled);
 
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
@@ -59,7 +61,7 @@ int main() {
     glEnable(GL_CULL_FACE);
 
     {
-        Chunk mesh{ { 0, 0 } };
+        World world;
         Shader shader{ "shaders/chunk.vert", "shaders/chunk.frag" };
         Texture texture{ "assets/frame.png" };
 
@@ -76,17 +78,15 @@ int main() {
             glClearColor(0.f, 0.7f, 1.f, 1.f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            glm::mat4 projection = glm::perspective(glm::radians(45.f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.f);
+            glm::mat4 projection = glm::perspective(glm::radians(60.f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 1000.f);
             glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-            auto model = glm::mat4(1.f);
 
             shader.use();
             shader.setMat4("u_projection", projection);
             shader.setMat4("u_view", view);
-            shader.setMat4("u_model", model);
             texture.use();
 
-            mesh.render();
+            world.render(shader);
 
             debugWindow.display(cameraPos, cameraFront);
 
