@@ -60,7 +60,7 @@ add_executable(MineCppraft main.cpp
         src/Shader.cpp
         src/QuadMesh.cpp
         src/CubeMesh.cpp
-        src/ChunkMesh.cpp
+        src/Chunk.cpp
         src/DebugWindow.cpp
         src/Texture.cpp)
 

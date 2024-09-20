@@ -4,7 +4,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 #include "Shader.hpp"
-#include "ChunkMesh.hpp"
+#include "Chunk.hpp"
 #include "DebugWindow.hpp"
 #include "Texture.hpp"
 
@@ -59,7 +59,7 @@ int main() {
     glEnable(GL_CULL_FACE);
 
     {
-        ChunkMesh mesh;
+        Chunk mesh;
         Shader shader{ "shaders/chunk.vert", "shaders/chunk.frag" };
         Texture texture{ "assets/frame.png" };
 
