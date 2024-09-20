@@ -1,9 +1,9 @@
 #pragma once
-#include <cstdint>
+#include "BlockId.hpp"
 #include <glm/glm.hpp>
 
 struct Vertex {
     glm::u8vec3 position;
-    uint8_t voxelId;
+    BlockId blockId;
     uint8_t faceId;
 };
