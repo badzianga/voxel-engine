@@ -1,7 +1,11 @@
+#include <iostream>
 #include "World.hpp"
 #include "Chunk.hpp"
+#include "Timer.hpp"
 
 World::World() {
+    Timer timer{};
+    timer.start();
     for (int z = 0; z < World::depth; ++z) {
         for (int x = 0; x < World::width; ++x) {
             // TODO: I think something bad might be happening here when using Chunk variables instead of pointers
@@ -11,6 +15,7 @@ World::World() {
             m_chunks.push_back(chunk);
         }
     }
+    std::cout << "Chunks generated after " << timer.getElapsedTime() << "s\n";
 }
 
 World::~World() {
