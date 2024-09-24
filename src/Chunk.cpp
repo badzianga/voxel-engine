@@ -40,7 +40,7 @@ void Chunk::generate() {
                 const int worldX = x + m_position.x * Chunk::size;
                 const int worldZ = z + m_position.y * Chunk::size;
                 const glm::vec2 worldPos{ worldX, worldZ };
-                auto localHeight = int(glm::simplex(worldPos * 0.01f) * 32 + 32);
+                auto localHeight = int(glm::simplex(worldPos * 0.01f) * 32 + 64);
 
                 // TODO: maybe for loop order like z > x > y would be better
                 // now, lots of localHeights are calculated unnecessarily

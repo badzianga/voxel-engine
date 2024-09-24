@@ -9,7 +9,6 @@ public:
     World();
     ~World();
     void render(Shader& shader) const;
-    [[nodiscard]] static glm::ivec3 getCenter();
 private:
     void addChunk(glm::ivec2 chunkPosition);
 

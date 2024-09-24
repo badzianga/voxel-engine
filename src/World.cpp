@@ -23,13 +23,6 @@ void World::render(Shader& shader) const {
     }
 }
 
-glm::ivec3 World::getCenter() {
-    int x = World::width * (Chunk::size / 2);
-    int y = Chunk::height / 2 + 2;
-    int z = World::depth * (Chunk::size / 2);
-    return { x, y, z };
-}
-
 void World::addChunk(glm::ivec2 chunkPosition) {
     /* TODO: I think something bad might be happening here when using Chunk variables instead of pointers - like
      * generating same chunk two times. I should write proper copy/move constructors for Chunk and not use pointers */

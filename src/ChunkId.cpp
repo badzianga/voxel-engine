@@ -1,6 +1,5 @@
 #include "ChunkId.hpp"
 
-
 // So, let's say max size of the world will be 16 x 16 chunks.
 // With that, it's possible to store chunk id in 1 byte (8 bits)
 // by using x and z coordinates as follows: z * 2^(bits/2) + x
