@@ -64,7 +64,8 @@ add_executable(MineCppraft main.cpp
         src/DebugWindow.cpp
         src/Texture.cpp
         src/World.cpp
-        src/Timer.cpp)
+        src/Timer.cpp
+        src/ChunkId.cpp)
 
 add_dependencies(MineCppraft glfw)
 add_dependencies(MineCppraft glad)

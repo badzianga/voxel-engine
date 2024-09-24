@@ -1,7 +1,8 @@
 #pragma once
 #include <glm/glm.hpp>
 #include "Chunk.hpp"
-#include <vector>
+#include "ChunkId.hpp"
+#include <unordered_map>
 
 class World {
 public:
@@ -9,10 +10,8 @@ public:
     ~World();
     void render(Shader& shader) const;
     [[nodiscard]] static glm::ivec3 getCenter();
-
-    static const int width = 4;
-    static const int depth = 4;
-    static const int area = width * depth;
 private:
-    std::vector<Chunk*> m_chunks;
+    void addChunk(glm::ivec2 chunkPosition);
+
+    std::unordered_map<ChunkId, Chunk*> m_chunks;
 };
