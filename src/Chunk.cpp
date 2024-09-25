@@ -5,6 +5,7 @@
 #include <glm/gtc/noise.hpp>
 #include <iostream>
 #include <glm/gtc/matrix_transform.hpp>
+#include <utility>
 
 constexpr int MAX_VISIBLE_VERTICES = 18;
 
@@ -20,27 +21,50 @@ static bool isVoid(glm::u8vec3 blockPos, const std::array<BlockId, Chunk::volume
     return true;
 }
 
+Chunk::Chunk() : m_vao(0), m_vbo(0), m_position(0), m_verticesCount(0), m_blocks(), m_model(1.f) {
+    std::cout << "Created chunk using default constructor\n";
+}
+
 Chunk::Chunk(glm::ivec2 position) : m_vao(0), m_vbo(0), m_position(position), m_verticesCount(0), m_blocks(), m_model(1.f) {
+    std::cout << "Created chunk using own constructor\n";
     generate();
     buildMesh();
     m_model = glm::translate(m_model, glm::vec3(position.x, 0.f, position.y) * static_cast<float>(Chunk::size));
-    std::cout << "Chunk (" << m_position.x << ", " << m_position.y << ") created\n";
 }
 
 Chunk::~Chunk() {
+    std::cout << "Deleted chunk with VAO ID: " << m_vao << '\n';
     glDeleteBuffers(1, &m_vbo);
     glDeleteVertexArrays(1, &m_vao);
-    std::cout << "Chunk (" << m_position.x << ", " << m_position.y << ") destroyed (VAO id: " << m_vao << ")\n";
+}
+
+Chunk& Chunk::operator=(Chunk&& other) noexcept {
+    std::cout << "Moved chunk with VAO ID: " << other.m_vao << '\n';
+    m_vao = std::exchange(other.m_vao, 0);
+    m_vbo = std::exchange(other.m_vbo, 0);
+    m_position = other.m_position;
+    m_model = std::move(other.m_model);
+    m_blocks = std::move(other.m_blocks);
+    m_vertices = std::move(other.m_vertices);
+    m_verticesCount = other.m_verticesCount;
+
+    return *this;
+}
+
+void Chunk::setPosition(glm::ivec2 position) {
+    m_position = position;
+    m_model = glm::translate(glm::mat4{1.f}, glm::vec3(position.x, 0.f, position.y) * static_cast<float>(Chunk::size));
 }
 
 void Chunk::generate() {
     for (int y = 0; y < Chunk::height; ++y) {
         for (int z = 0; z < Chunk::size; ++z) {
             for (int x = 0; x < Chunk::size; ++x) {
-                const int worldX = x + m_position.x * Chunk::size;
-                const int worldZ = z + m_position.y * Chunk::size;
-                const glm::vec2 worldPos{ worldX, worldZ };
-                auto localHeight = int(glm::simplex(worldPos * 0.01f) * 32 + 64);
+//                const int worldX = x + m_position.x * Chunk::size;
+//                const int worldZ = z + m_position.y * Chunk::size;
+//                const glm::vec2 worldPos{ worldX, worldZ };
+//                auto localHeight = int(glm::simplex(worldPos * 0.01f) * 32 + 64);
+                int localHeight = 64;
 
                 // TODO: maybe for loop order like z > x > y would be better
                 // now, lots of localHeights are calculated unnecessarily

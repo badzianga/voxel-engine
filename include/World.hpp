@@ -7,10 +7,9 @@
 class World {
 public:
     World();
-    ~World();
     void render(Shader& shader) const;
 private:
     void addChunk(glm::ivec2 chunkPosition);
 
-    std::unordered_map<ChunkId, Chunk*> m_chunks;
+    std::unordered_map<ChunkId, Chunk> m_chunks;
 };
