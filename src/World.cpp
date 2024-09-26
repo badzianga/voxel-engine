@@ -3,11 +3,14 @@
 #include "Chunk.hpp"
 
 World::World() {
-    for (int z = -2; z < 2; ++z) {
-        for (int x = -2; x < 2; ++x) {
+    for (int z = -8; z < 8; ++z) {
+        for (int x = -8; x < 8; ++x) {
             glm::ivec2 chunkPos{ x, z };
             addChunk(chunkPos);
         }
+    }
+    for (auto& chunk : m_chunks) {
+        chunk.second.buildMesh();
     }
 }
 

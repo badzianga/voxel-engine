@@ -3,7 +3,6 @@
 #include "Shader.hpp"
 #include <glad/glad.h>
 #include <glm/gtc/noise.hpp>
-#include <iostream>
 #include <glm/gtc/matrix_transform.hpp>
 #include <utility>
 
@@ -22,24 +21,20 @@ static bool isVoid(glm::u8vec3 blockPos, const std::array<BlockId, Chunk::volume
 }
 
 Chunk::Chunk() : m_vao(0), m_vbo(0), m_position(0), m_verticesCount(0), m_blocks(), m_model(1.f) {
-    std::cout << "Created chunk using default constructor\n";
+    generate();
 }
 
 Chunk::Chunk(glm::ivec2 position) : m_vao(0), m_vbo(0), m_position(position), m_verticesCount(0), m_blocks(), m_model(1.f) {
-    std::cout << "Created chunk using own constructor\n";
     generate();
-    buildMesh();
     m_model = glm::translate(m_model, glm::vec3(position.x, 0.f, position.y) * static_cast<float>(Chunk::size));
 }
 
 Chunk::~Chunk() {
-    std::cout << "Deleted chunk with VAO ID: " << m_vao << '\n';
     glDeleteBuffers(1, &m_vbo);
     glDeleteVertexArrays(1, &m_vao);
 }
 
 Chunk& Chunk::operator=(Chunk&& other) noexcept {
-    std::cout << "Moved chunk with VAO ID: " << other.m_vao << '\n';
     m_vao = std::exchange(other.m_vao, 0);
     m_vbo = std::exchange(other.m_vbo, 0);
     m_position = other.m_position;
