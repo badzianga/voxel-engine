@@ -10,6 +10,8 @@
 
 void mouseCallback(GLFWwindow* window, double xPosIn, double yPosIn);
 void processInput(GLFWwindow* window);
+void APIENTRY glDebugOutput(GLenum source, GLenum type, unsigned int id, GLenum severity,
+                            GLsizei length, const char *message, const void *userParam);
 
 constexpr bool vSyncEnabled = false;
 
@@ -36,6 +38,7 @@ int main() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 
     GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "MineCppraft", nullptr, nullptr);
     if (window == nullptr) {
@@ -55,6 +58,16 @@ int main() {
         glfwDestroyWindow(window);
         glfwTerminate();
         return -1;
+    }
+
+    int flags;
+    glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
+    if (flags & GL_CONTEXT_FLAG_DEBUG_BIT) {
+        glEnable(GL_DEBUG_OUTPUT);
+        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+        glDebugMessageCallback(glDebugOutput, nullptr);
+        glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+        std::cout << "Debug output enabled\n";
     }
 
     glEnable(GL_DEPTH_TEST);
@@ -158,4 +171,47 @@ void mouseCallback(GLFWwindow* window, double xPosIn, double yPosIn) {
     front.y = std::sin(glm::radians(pitch));
     front.z = std::sin(glm::radians(yaw)) * std::cos(glm::radians(pitch));
     cameraFront = glm::normalize(front);
+}
+
+void APIENTRY glDebugOutput(GLenum source, GLenum type, unsigned int id, GLenum severity,
+                            GLsizei length, const char *message, const void* userParam) {
+    (void)length;
+    (void)userParam;
+    // ignore non-significant error/warning codes
+    if (id == 131169 or id == 131185 or id == 131218 or id == 131204) return;
+
+    std::cerr << "Debug message (" << id << "): " << message << '\n';
+
+    switch (source) {
+        case GL_DEBUG_SOURCE_API:             std::cerr << "Source: API, "; break;
+        case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   std::cerr << "Source: Window System, "; break;
+        case GL_DEBUG_SOURCE_SHADER_COMPILER: std::cerr << "Source: Shader Compiler, "; break;
+        case GL_DEBUG_SOURCE_THIRD_PARTY:     std::cerr << "Source: Third Party, "; break;
+        case GL_DEBUG_SOURCE_APPLICATION:     std::cerr << "Source: Application, "; break;
+        case GL_DEBUG_SOURCE_OTHER:           std::cerr << "Source: Other, "; break;
+        default:                              break;
+    }
+
+    switch (type) {
+        case GL_DEBUG_TYPE_ERROR:               std::cerr << "Type: Error, "; break;
+        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: std::cerr << "Type: Deprecated Behaviour, "; break;
+        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  std::cerr << "Type: Undefined Behaviour, "; break;
+        case GL_DEBUG_TYPE_PORTABILITY:         std::cerr << "Type: Portability, "; break;
+        case GL_DEBUG_TYPE_PERFORMANCE:         std::cerr << "Type: Performance, "; break;
+        case GL_DEBUG_TYPE_MARKER:              std::cerr << "Type: Marker, "; break;
+        case GL_DEBUG_TYPE_PUSH_GROUP:          std::cerr << "Type: Push Group, "; break;
+        case GL_DEBUG_TYPE_POP_GROUP:           std::cerr << "Type: Pop Group, "; break;
+        case GL_DEBUG_TYPE_OTHER:               std::cerr << "Type: Other, "; break;
+        default:                                break;
+    }
+    std::cerr << '\n';
+
+    switch (severity) {
+        case GL_DEBUG_SEVERITY_HIGH:         std::cerr << "Severity: high\n"; break;
+        case GL_DEBUG_SEVERITY_MEDIUM:       std::cerr << "Severity: medium\n"; break;
+        case GL_DEBUG_SEVERITY_LOW:          std::cerr << "Severity: low\n"; break;
+        case GL_DEBUG_SEVERITY_NOTIFICATION: std::cerr << "Severity: notification\n"; break;
+        default:                             break;
+    }
+    __builtin_trap();
 }
