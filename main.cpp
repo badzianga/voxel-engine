@@ -2,11 +2,11 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <iostream>
 #include "Shader.hpp"
 #include "DebugWindow.hpp"
 #include "Texture.hpp"
 #include "World.hpp"
+#include "Logger.hpp"
 
 void mouseCallback(GLFWwindow* window, double xPosIn, double yPosIn);
 void processInput(GLFWwindow* window);
@@ -42,7 +42,7 @@ int main() {
 
     GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "MineCppraft", nullptr, nullptr);
     if (window == nullptr) {
-        std::cerr << "Failed to create GLFW window\n";
+        LOG_CRITICAL("Failed to create GLFW window!");
         glfwTerminate();
         return -1;
     }
@@ -54,7 +54,7 @@ int main() {
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     if (not gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        std::cerr << "Failed to initialize GLAD\n";
+        LOG_CRITICAL("Failed to initialize GLAD!");
         glfwDestroyWindow(window);
         glfwTerminate();
         return -1;
@@ -67,7 +67,7 @@ int main() {
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
         glDebugMessageCallback(glDebugOutput, nullptr);
         glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
-        std::cout << "Debug output enabled\n";
+        LOG_INFO("OpenGL Debug output enabled");
     }
 
     glEnable(GL_DEPTH_TEST);
@@ -106,7 +106,6 @@ int main() {
             glfwSwapBuffers(window);
             glfwPollEvents();
         }
-
     }
 
     glfwDestroyWindow(window);
@@ -180,38 +179,43 @@ void APIENTRY glDebugOutput(GLenum source, GLenum type, unsigned int id, GLenum 
     // ignore non-significant error/warning codes
     if (id == 131169 or id == 131185 or id == 131218 or id == 131204) return;
 
-    std::cerr << "Debug message (" << id << "): " << message << '\n';
+    LOG_ERROR(message);
 
+    std::string logDetails = "OpenGL Debug source: ";
     switch (source) {
-        case GL_DEBUG_SOURCE_API:             std::cerr << "Source: API, "; break;
-        case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   std::cerr << "Source: Window System, "; break;
-        case GL_DEBUG_SOURCE_SHADER_COMPILER: std::cerr << "Source: Shader Compiler, "; break;
-        case GL_DEBUG_SOURCE_THIRD_PARTY:     std::cerr << "Source: Third Party, "; break;
-        case GL_DEBUG_SOURCE_APPLICATION:     std::cerr << "Source: Application, "; break;
-        case GL_DEBUG_SOURCE_OTHER:           std::cerr << "Source: Other, "; break;
-        default:                              break;
+        case GL_DEBUG_SOURCE_API:             logDetails += "API";             break;
+        case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   logDetails += "Window System";   break;
+        case GL_DEBUG_SOURCE_SHADER_COMPILER: logDetails += "Shader Compiler"; break;
+        case GL_DEBUG_SOURCE_THIRD_PARTY:     logDetails += "Third Party";     break;
+        case GL_DEBUG_SOURCE_APPLICATION:     logDetails += "Application";     break;
+        case GL_DEBUG_SOURCE_OTHER:           logDetails += "Other";           break;
+        default:                              logDetails += "Unknown";         break;
     }
 
+    logDetails += ", type: ";
     switch (type) {
-        case GL_DEBUG_TYPE_ERROR:               std::cerr << "Type: Error, "; break;
-        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: std::cerr << "Type: Deprecated Behaviour, "; break;
-        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  std::cerr << "Type: Undefined Behaviour, "; break;
-        case GL_DEBUG_TYPE_PORTABILITY:         std::cerr << "Type: Portability, "; break;
-        case GL_DEBUG_TYPE_PERFORMANCE:         std::cerr << "Type: Performance, "; break;
-        case GL_DEBUG_TYPE_MARKER:              std::cerr << "Type: Marker, "; break;
-        case GL_DEBUG_TYPE_PUSH_GROUP:          std::cerr << "Type: Push Group, "; break;
-        case GL_DEBUG_TYPE_POP_GROUP:           std::cerr << "Type: Pop Group, "; break;
-        case GL_DEBUG_TYPE_OTHER:               std::cerr << "Type: Other, "; break;
-        default:                                break;
+        case GL_DEBUG_TYPE_ERROR:               logDetails += "Error";               break;
+        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: logDetails += "Deprecated Behavior"; break;
+        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  logDetails += "Undefined Behavior";  break;
+        case GL_DEBUG_TYPE_PORTABILITY:         logDetails += "Portability";         break;
+        case GL_DEBUG_TYPE_PERFORMANCE:         logDetails += "Performance";         break;
+        case GL_DEBUG_TYPE_MARKER:              logDetails += "Marker";              break;
+        case GL_DEBUG_TYPE_PUSH_GROUP:          logDetails += "Push Group";          break;
+        case GL_DEBUG_TYPE_POP_GROUP:           logDetails += "Pop Group";           break;
+        case GL_DEBUG_TYPE_OTHER:               logDetails += "Other";               break;
+        default:                                logDetails += "Unknown";             break;
     }
-    std::cerr << '\n';
 
+    logDetails += ", severity: ";
     switch (severity) {
-        case GL_DEBUG_SEVERITY_HIGH:         std::cerr << "Severity: high\n"; break;
-        case GL_DEBUG_SEVERITY_MEDIUM:       std::cerr << "Severity: medium\n"; break;
-        case GL_DEBUG_SEVERITY_LOW:          std::cerr << "Severity: low\n"; break;
-        case GL_DEBUG_SEVERITY_NOTIFICATION: std::cerr << "Severity: notification\n"; break;
-        default:                             break;
+        case GL_DEBUG_SEVERITY_HIGH:         logDetails += "High";         break;
+        case GL_DEBUG_SEVERITY_MEDIUM:       logDetails += "Medium";       break;
+        case GL_DEBUG_SEVERITY_LOW:          logDetails += "Low";          break;
+        case GL_DEBUG_SEVERITY_NOTIFICATION: logDetails += "Notification"; break;
+        default:                             logDetails += "Unknown";      break;
     }
-    __builtin_trap();
+    
+    LOG_INFO(logDetails);
+
+    std::exit(1);
 }

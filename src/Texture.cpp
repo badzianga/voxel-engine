@@ -3,6 +3,7 @@
 #include <glad/glad.h>
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+#include "Logger.hpp"
 
 Texture::Texture() : m_id(0) {}
 
@@ -32,7 +33,7 @@ void Texture::load(const char* filePath, bool flipY) {
         glGenerateMipmap(GL_TEXTURE_2D);
     }
     else {
-        std::cerr << "Failed to load texture\n";
+        LOG_ERROR("Failed to load texture file: " + std::string(filePath));
     }
     stbi_image_free(data);
 }

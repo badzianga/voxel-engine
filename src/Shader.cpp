@@ -3,25 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
-
-void checkCompileErrors(uint32_t shader, const std::string& type) {
-    int32_t success;
-    char infoLog[512];
-    if (type != "program") {
-        glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-        if (not success) {
-            glGetShaderInfoLog(shader, 512, nullptr, infoLog);
-            std::cerr << "[Error] Failed to compile " << type << " shader: " << infoLog << '\n';
-        }
-    }
-    else {
-        glGetProgramiv(shader, GL_LINK_STATUS, &success);
-        if (not success) {
-            glGetProgramInfoLog(shader, 512, nullptr, infoLog);
-            std::cerr << "[Error] Failed to link shader program: " << infoLog << '\n';
-        }
-    }
-}
+#include "Logger.hpp"
 
 Shader::Shader() : m_id(0) {}
 
@@ -52,7 +34,7 @@ void Shader::load(const char* vertexPath, const char* fragmentPath) {
         fragmentCode = fShaderStream.str();
     }
     catch (std::ifstream::failure& error) {
-        std::cerr << "[Error] Failed to load shader file: " << error.what() << '\n';
+        LOG_ERROR("Failed to load shader file; make sure the file path is correct");
     }
     const char* vertexShaderCode = vertexCode.c_str();
     const char* fragmentShaderCode = fragmentCode.c_str();
@@ -61,16 +43,16 @@ void Shader::load(const char* vertexPath, const char* fragmentPath) {
     vertex = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertex, 1, &vertexShaderCode, nullptr);
     glCompileShader(vertex);
-    checkCompileErrors(vertex, "vertex");
+
     fragment = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragment, 1, &fragmentShaderCode, nullptr);
     glCompileShader(fragment);
-    checkCompileErrors(fragment, "fragment");
+
     m_id = glCreateProgram();
     glAttachShader(m_id, vertex);
     glAttachShader(m_id, fragment);
     glLinkProgram(m_id);
-    checkCompileErrors(m_id, "program");
+
     glDetachShader(m_id, vertex);
     glDetachShader(m_id, fragment);
     glDeleteShader(vertex);
