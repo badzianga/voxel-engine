@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <glm/glm.hpp>
 
-using ChunkId = int8_t;
+using ChunkId = int32_t;
 
 const int chunkIdTypeSizeInBits = sizeof(ChunkId) * 8;
 

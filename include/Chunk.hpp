@@ -6,18 +6,14 @@ class Shader;
 
 class Chunk {
 public:
-    Chunk();
     explicit Chunk(glm::ivec2 position);
-    Chunk(Chunk&) = delete;
     ~Chunk();
-    Chunk& operator=(Chunk&) = delete;
-    Chunk& operator=(Chunk&& other) noexcept;
-    void setPosition(glm::ivec2 position);
     void generate();
     void buildMesh();
     void render(Shader& shader) const;
-    static const int size = 16;
-    static const int height = 128;
+    [[nodiscard]] BlockId blockAt(int x, int y, int z) const;
+    static const int size = 2;
+    static const int height = 2;
     static const int area = size * size;
     static const int volume = area * height;
 private:

@@ -2,6 +2,7 @@
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
+#include "Chunk.hpp"
 
 DebugWindow::DebugWindow(GLFWwindow* window) : m_io(ImGui::GetIO()) {
     m_io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
@@ -30,8 +31,10 @@ void DebugWindow::display(glm::vec3 cameraPos, glm::vec3 cameraFront) const {
     ImGui::Begin("Debug panel");
     ImGui::SetWindowPos({ 16, 16 });
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.f / m_io.Framerate, m_io.Framerate);
-    ImGui::Text("Camera position: %.3f %.3f %.3f", cameraPos.x, cameraPos.y, cameraPos.z);
-    ImGui::Text("Camera front: %.3f %.3f %.3f", cameraFront.x, cameraFront.y, cameraFront.z);
+    ImGui::Text("Camera position: (%.3f %.3f %.3f)", cameraPos.x, cameraPos.y, cameraPos.z);
+    ImGui::Text("Camera front: (%.3f %.3f %.3f)", cameraFront.x, cameraFront.y, cameraFront.z);
+    glm::ivec2 chunkPos{ std::floor(cameraPos.x) / Chunk::size, std::floor(cameraPos.z) / Chunk::size };
+    ImGui::Text("Current chunk: (%d %d)", chunkPos.x, chunkPos.y);
     ImGui::End();
 
     ImGui::Render();

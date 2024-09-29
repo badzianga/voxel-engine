@@ -20,7 +20,7 @@ constexpr uint32_t SCR_HEIGHT = 720;
 
 constexpr float CAMERA_SPEED = 16.f;
 
-glm::vec3 cameraPos = glm::vec3{ 0.f, 80.f, 0.f };
+glm::vec3 cameraPos = glm::vec3{ 0.f, 5.f, 0.f };
 glm::vec3 cameraFront = glm::vec3(0.f, 0.f, -1.f);
 const glm::vec3 cameraUp = glm::vec3(0.f, 1.f, 0.f);
 
@@ -179,8 +179,6 @@ void APIENTRY glDebugOutput(GLenum source, GLenum type, unsigned int id, GLenum 
     // ignore non-significant error/warning codes
     if (id == 131169 or id == 131185 or id == 131218 or id == 131204) return;
 
-    LOG_ERROR(message);
-
     std::string logDetails = "OpenGL Debug source: ";
     switch (source) {
         case GL_DEBUG_SOURCE_API:             logDetails += "API";             break;
@@ -214,7 +212,8 @@ void APIENTRY glDebugOutput(GLenum source, GLenum type, unsigned int id, GLenum 
         case GL_DEBUG_SEVERITY_NOTIFICATION: logDetails += "Notification"; break;
         default:                             logDetails += "Unknown";      break;
     }
-    
+
+    LOG_ERROR(message);
     LOG_INFO(logDetails);
 
     std::exit(1);

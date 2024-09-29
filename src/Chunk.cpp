@@ -1,10 +1,11 @@
 #include "Chunk.hpp"
 #include "BlockId.hpp"
 #include "Shader.hpp"
+#include "Logger.hpp"
+#include "ChunkId.hpp"
 #include <glad/glad.h>
 #include <glm/gtc/noise.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <utility>
 
 constexpr int MAX_VISIBLE_VERTICES = 18;
 
@@ -20,35 +21,16 @@ static bool isVoid(glm::u8vec3 blockPos, const std::array<BlockId, Chunk::volume
     return true;
 }
 
-Chunk::Chunk() : m_vao(0), m_vbo(0), m_position(0), m_verticesCount(0), m_blocks(), m_model(1.f) {
-    generate();
-}
-
 Chunk::Chunk(glm::ivec2 position) : m_vao(0), m_vbo(0), m_position(position), m_verticesCount(0), m_blocks(), m_model(1.f) {
     generate();
     m_model = glm::translate(m_model, glm::vec3(position.x, 0.f, position.y) * static_cast<float>(Chunk::size));
+    LOG_DEBUG("Created chunk at position (" + std::to_string(m_position.x) + ' ' + std::to_string(m_position.y) + ')');
 }
 
 Chunk::~Chunk() {
     glDeleteBuffers(1, &m_vbo);
     glDeleteVertexArrays(1, &m_vao);
-}
-
-Chunk& Chunk::operator=(Chunk&& other) noexcept {
-    m_vao = std::exchange(other.m_vao, 0);
-    m_vbo = std::exchange(other.m_vbo, 0);
-    m_position = other.m_position;
-    m_model = std::move(other.m_model);
-    m_blocks = std::move(other.m_blocks);
-    m_vertices = std::move(other.m_vertices);
-    m_verticesCount = other.m_verticesCount;
-
-    return *this;
-}
-
-void Chunk::setPosition(glm::ivec2 position) {
-    m_position = position;
-    m_model = glm::translate(glm::mat4{1.f}, glm::vec3(position.x, 0.f, position.y) * static_cast<float>(Chunk::size));
+    LOG_DEBUG("Deleted chunk at position (" + std::to_string(m_position.x) + ' ' + std::to_string(m_position.y) + ')');
 }
 
 void Chunk::generate() {
@@ -166,6 +148,9 @@ void Chunk::buildMesh() {
 
     glVertexAttribIPointer(2, 1, GL_UNSIGNED_BYTE, sizeof(Vertex), (const void*)offsetof(Vertex, faceId));
     glEnableVertexAttribArray(2);
+
+    LOG_DEBUG("Built mesh with " + std::to_string(m_verticesCount)
+        + " vertices for chunk at position (" + std::to_string(m_position.x) + ' ' + std::to_string(m_position.y) + ')');
 }
 
 void Chunk::render(Shader& shader) const {
@@ -182,4 +167,16 @@ int Chunk::addFace(int index, Vertex v0, Vertex v1, Vertex v2, Vertex v3, Vertex
     m_vertices[index++] = v4;
     m_vertices[index++] = v5;
     return index;
+}
+
+BlockId Chunk::blockAt(int x, int y, int z) const {
+    if (x < 0 or x >= Chunk::size or y < 0 or y >= Chunk::height or z < 0 or z >= Chunk::size) {
+        LOG_CRITICAL("Trying to get block from chunk ("
+            + std::to_string(m_position.x) + ' ' + std::to_string(m_position.y)
+            + ") at position (" + std::to_string(x) + ' ' + std::to_string(y) + ' ' + std::to_string(z)
+            + "); THIS SHOULD NOT HAPPEN!");
+        std::exit(1);
+    }
+    int index = x + Chunk::size * z + Chunk::area * y;
+    return m_blocks[index];
 }
