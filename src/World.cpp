@@ -2,15 +2,18 @@
 #include "World.hpp"
 #include "Chunk.hpp"
 #include "Logger.hpp"
+#include "Timer.hpp"
 
 World::World() {
+    Timer timer{};
+    timer.start();
     for (int z = -4; z < 4; ++z) {
         for (int x = -4; x < 4; ++x) {
             glm::ivec2 chunkPos{ x, z };
             addChunk(chunkPos);
         }
     }
-    LOG_DEBUG("Created " + std::to_string(m_chunks.size()) + " chunks");
+    LOG_DEBUG("Generated " + std::to_string(m_chunks.size()) + " chunks after " + std::to_string(timer.getElapsedTime()) + 's');
     for (auto& chunkPair : m_chunks) {
         chunkPair.second->buildMesh(m_chunks);
     }

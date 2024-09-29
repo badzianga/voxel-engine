@@ -36,13 +36,13 @@ static bool isVoid(const glm::ivec3& localPos, const glm::ivec3& worldPos, const
 Chunk::Chunk(glm::ivec2 position) : m_vao(0), m_vbo(0), m_position(position), m_verticesCount(0), m_blocks(), m_model(1.f) {
     generate();
     m_model = glm::translate(m_model, glm::vec3(position.x, 0.f, position.y) * static_cast<float>(Chunk::size));
-    LOG_DEBUG("Created chunk at position (" + std::to_string(m_position.x) + ' ' + std::to_string(m_position.y) + ')');
+//    LOG_DEBUG("Created chunk at position (" + std::to_string(m_position.x) + ' ' + std::to_string(m_position.y) + ')');
 }
 
 Chunk::~Chunk() {
     glDeleteBuffers(1, &m_vbo);
     glDeleteVertexArrays(1, &m_vao);
-    LOG_DEBUG("Deleted chunk at position (" + std::to_string(m_position.x) + ' ' + std::to_string(m_position.y) + ')');
+//    LOG_DEBUG("Deleted chunk at position (" + std::to_string(m_position.x) + ' ' + std::to_string(m_position.y) + ')');
 }
 
 void Chunk::generate() {
