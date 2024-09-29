@@ -20,7 +20,7 @@ constexpr uint32_t SCR_HEIGHT = 720;
 
 constexpr float CAMERA_SPEED = 16.f;
 
-glm::vec3 cameraPos = glm::vec3{ 0.f, 5.f, 0.f };
+glm::vec3 cameraPos = glm::vec3{ 0.f, 80.f, 0.f };
 glm::vec3 cameraFront = glm::vec3(0.f, 0.f, -1.f);
 const glm::vec3 cameraUp = glm::vec3(0.f, 1.f, 0.f);
 

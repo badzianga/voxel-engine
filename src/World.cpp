@@ -4,15 +4,15 @@
 #include "Logger.hpp"
 
 World::World() {
-    for (int z = -1; z < 2; ++z) {
-        for (int x = -1; x < 2; ++x) {
+    for (int z = -4; z < 4; ++z) {
+        for (int x = -4; x < 4; ++x) {
             glm::ivec2 chunkPos{ x, z };
             addChunk(chunkPos);
         }
     }
     LOG_DEBUG("Created " + std::to_string(m_chunks.size()) + " chunks");
     for (auto& chunkPair : m_chunks) {
-        chunkPair.second->buildMesh();
+        chunkPair.second->buildMesh(m_chunks);
     }
 }
 

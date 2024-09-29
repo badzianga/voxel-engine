@@ -2,21 +2,33 @@
 #include "BlockId.hpp"
 #include "Shader.hpp"
 #include "Logger.hpp"
-#include "ChunkId.hpp"
 #include <glad/glad.h>
 #include <glm/gtc/noise.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 constexpr int MAX_VISIBLE_VERTICES = 18;
 
-static bool isVoid(glm::u8vec3 blockPos, const std::array<BlockId, Chunk::volume>& blocks) {
-    int x = blockPos.x;
-    int y = blockPos.y;
-    int z = blockPos.z;
-    if (x >= 0 and x < Chunk::size and y >= 0 and y < Chunk::height and z >= 0 and z < Chunk::size) {
-        if (blocks[x + Chunk::size * z + Chunk::area * y] > 0) {
-            return false;
-        }
+static int posMod(int i, int n) {
+    return (i % n + n) % n;
+}
+
+static bool isVoid(const glm::ivec3& localPos, const glm::ivec3& worldPos, const std::unordered_map<ChunkId, Chunk*>& chunks) {
+    int x = localPos.x;
+    int y = localPos.y;
+    int z = localPos.z;
+
+    glm::ivec2 chunkPos{ (int)std::floor((float)worldPos.x / Chunk::size), (int)std::floor((float)worldPos.z / Chunk::size) };
+//    LOG_DEBUG("Calculated chunk pos: (" + std::to_string(chunkPos.x) + ' ' + std::to_string(chunkPos.y) + ')');
+    ChunkId chunkId = calculateChunkId(chunkPos);
+    auto chunkIt = chunks.find(chunkId);
+    if (chunkIt == chunks.end()) {
+//        LOG_DEBUG("Chunk with position (" + std::to_string(chunkPos.x) + ' ' + std::to_string(chunkPos.y) + ") doesn't exist, so neighbor is void");
+        return true;
+    }
+
+    glm::ivec3 blockPos{ posMod(x, Chunk::size), y, posMod(z, Chunk::size) };
+    if (chunkIt->second->blockAt(blockPos.x, blockPos.y, blockPos.z) != 0) {
+        return false;
     }
     return true;
 }
@@ -37,11 +49,11 @@ void Chunk::generate() {
     for (int y = 0; y < Chunk::height; ++y) {
         for (int z = 0; z < Chunk::size; ++z) {
             for (int x = 0; x < Chunk::size; ++x) {
-//                const int worldX = x + m_position.x * Chunk::size;
-//                const int worldZ = z + m_position.y * Chunk::size;
-//                const glm::vec2 worldPos{ worldX, worldZ };
-//                auto localHeight = int(glm::simplex(worldPos * 0.01f) * 32 + 64);
-                int localHeight = 64;
+                const int worldX = x + m_position.x * Chunk::size;
+                const int worldZ = z + m_position.y * Chunk::size;
+                const glm::vec2 worldPos{ worldX, worldZ };
+                auto localHeight = int(glm::simplex(worldPos * 0.01f) * 32 + 64);
+//                int localHeight = 64;
 
                 // TODO: maybe for loop order like z > x > y would be better
                 // now, lots of localHeights are calculated unnecessarily
@@ -54,7 +66,7 @@ void Chunk::generate() {
     }
 }
 
-void Chunk::buildMesh() {
+void Chunk::buildMesh(const std::unordered_map<ChunkId, Chunk*>& chunks) {
     m_vertices.reserve(Chunk::volume * MAX_VISIBLE_VERTICES);
 
     int index = 0;
@@ -68,8 +80,11 @@ void Chunk::buildMesh() {
                     continue;
                 }
 
+                int worldX = x + m_position.x * Chunk::size;
+                int worldZ = z + m_position.y * Chunk::size;
+
                 // top face
-                if (isVoid({x, y + 1, z}, m_blocks)) {
+                if (isVoid({x, y + 1, z}, {worldX, y + 1, worldZ}, chunks)) {
                     Vertex v0 = {{x, y + 1, z}, blockId, 0};
                     Vertex v1 = {{x + 1, y + 1, z}, blockId, 0};
                     Vertex v2 = {{x + 1, y + 1, z + 1}, blockId, 0};
@@ -79,7 +94,7 @@ void Chunk::buildMesh() {
                 }
 
                 // bottom face
-                if (isVoid({x, y - 1, z}, m_blocks)) {
+                if (isVoid({x, y - 1, z}, {worldX, y - 1, worldZ}, chunks)) {
                     Vertex v0 = {{x, y, z}, blockId, 1};
                     Vertex v1 = {{x + 1, y, z}, blockId, 1};
                     Vertex v2 = {{x + 1, y, z + 1}, blockId, 1};
@@ -89,7 +104,7 @@ void Chunk::buildMesh() {
                 }
 
                 // right face
-                if (isVoid({x + 1, y, z}, m_blocks)) {
+                if (isVoid({x + 1, y, z}, {worldX + 1, y, worldZ}, chunks)) {
                     Vertex v0 = {{x + 1, y, z}, blockId, 2};
                     Vertex v1 = {{x + 1, y + 1, z}, blockId, 2};
                     Vertex v2 = {{x + 1, y + 1, z + 1}, blockId, 2};
@@ -99,7 +114,7 @@ void Chunk::buildMesh() {
                 }
 
                 // left face
-                if (isVoid({x - 1, y, z}, m_blocks)) {
+                if (isVoid({x - 1, y, z}, {worldX - 1, y, worldZ}, chunks)) {
                     Vertex v0 = {{x, y, z}, blockId, 3};
                     Vertex v1 = {{x, y + 1, z}, blockId, 3};
                     Vertex v2 = {{x, y + 1, z + 1}, blockId, 3};
@@ -109,7 +124,7 @@ void Chunk::buildMesh() {
                 }
 
                 // back face
-                if (isVoid({x, y, z - 1}, m_blocks)) {
+                if (isVoid({x, y, z - 1}, {worldX, y, worldZ - 1}, chunks)) {
                     Vertex v0 = {{x, y, z}, blockId, 4};
                     Vertex v1 = {{x, y + 1, z}, blockId, 4};
                     Vertex v2 = {{x + 1, y + 1, z}, blockId, 4};
@@ -119,7 +134,7 @@ void Chunk::buildMesh() {
                 }
 
                 // front face
-                if (isVoid({x, y, z + 1}, m_blocks)) {
+                if (isVoid({x, y, z + 1}, {worldX, y, worldZ + 1}, chunks)) {
                     Vertex v0 = {{x, y, z + 1}, blockId, 5};
                     Vertex v1 = {{x, y + 1, z + 1}, blockId, 5};
                     Vertex v2 = {{x + 1, y + 1, z + 1}, blockId, 5};
@@ -171,11 +186,10 @@ int Chunk::addFace(int index, Vertex v0, Vertex v1, Vertex v2, Vertex v3, Vertex
 
 BlockId Chunk::blockAt(int x, int y, int z) const {
     if (x < 0 or x >= Chunk::size or y < 0 or y >= Chunk::height or z < 0 or z >= Chunk::size) {
-        LOG_CRITICAL("Trying to get block from chunk ("
-            + std::to_string(m_position.x) + ' ' + std::to_string(m_position.y)
-            + ") at position (" + std::to_string(x) + ' ' + std::to_string(y) + ' ' + std::to_string(z)
-            + "); THIS SHOULD NOT HAPPEN!");
-        std::exit(1);
+//        LOG_DEBUG("Trying to get block from chunk ("
+//            + std::to_string(m_position.x) + ' ' + std::to_string(m_position.y)
+//            + ") at position (" + std::to_string(x) + ' ' + std::to_string(y) + ' ' + std::to_string(z) + ')');
+        return 0;
     }
     int index = x + Chunk::size * z + Chunk::area * y;
     return m_blocks[index];
