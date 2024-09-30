@@ -14,9 +14,11 @@ World::World() {
         }
     }
     LOG_DEBUG("Generated " + std::to_string(m_chunks.size()) + " chunks after " + std::to_string(timer.getElapsedTime()) + 's');
+    timer.start();
     for (auto& chunkPair : m_chunks) {
         chunkPair.second->buildMesh(m_chunks);
     }
+    LOG_DEBUG("Built chunk meshes after " + std::to_string(timer.getElapsedTime()) + 's');
 }
 
 World::~World() {

@@ -2,6 +2,7 @@
 
 in vec3 vertexColor;
 in vec2 vertexUV;
+in float vertexShading;
 
 out vec4 fragmentColor;
 
@@ -14,8 +15,11 @@ void main() {
     vec3 textureColor = texture(u_texture, vertexUV).rgb;
 
     textureColor = pow(textureColor, gamma);
-    textureColor.rgb *= vertexColor.rgb;
-    textureColor = pow(textureColor, inverseGamma);
+//    textureColor.rgb *= vertexColor.rgb;
 
+    textureColor.rgb = vec3(1.f);
+    textureColor.rgb *= vertexShading;
+
+    textureColor = pow(textureColor, inverseGamma);
     fragmentColor = vec4(textureColor, 1.f);
 }

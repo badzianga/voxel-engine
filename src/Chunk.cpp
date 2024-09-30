@@ -1,15 +1,14 @@
 #include "Chunk.hpp"
 #include "BlockId.hpp"
 #include "Shader.hpp"
-#include "Logger.hpp"
 #include <glad/glad.h>
 #include <glm/gtc/noise.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 constexpr int MAX_VISIBLE_VERTICES = 18;
 
-static int posMod(int i, int n) {
-    return (i % n + n) % n;
+static int posMod(int i) {
+    return (i % Chunk::size + Chunk::size) % Chunk::size;
 }
 
 static bool isVoid(const glm::ivec3& localPos, const glm::ivec3& worldPos, const std::unordered_map<ChunkId, Chunk*>& chunks) {
@@ -26,11 +25,67 @@ static bool isVoid(const glm::ivec3& localPos, const glm::ivec3& worldPos, const
         return true;
     }
 
-    glm::ivec3 blockPos{ posMod(x, Chunk::size), y, posMod(z, Chunk::size) };
+    glm::ivec3 blockPos{posMod(x), y, posMod(z)};
     if (chunkIt->second->blockAt(blockPos.x, blockPos.y, blockPos.z) != 0) {
         return false;
     }
     return true;
+}
+
+static std::array<uint8_t, 4> getAmbientOcclusion(const glm::ivec3& localPos, const glm::ivec3& worldPos, const std::unordered_map<ChunkId, Chunk*>& chunks, char plane) {
+    assert(plane == 'X' or plane == 'Y' or plane == 'Z');
+
+    int x = localPos.x;
+    int y = localPos.y;
+    int z = localPos.z;
+
+    int wx = worldPos.x;
+    int wy = worldPos.y;
+    int wz = worldPos.z;
+
+    bool a, b, c, d, e, f, g, h;
+
+    // b a h
+    // c   g
+    // d e f
+    if (plane == 'Y') {
+        a = isVoid({x, y, z - 1}, {wx, wy, wz - 1}, chunks);
+        b = isVoid({x - 1, y, z - 1}, {wx - 1, wy, wz - 1}, chunks);
+        c = isVoid({x - 1, y, z}, {wx - 1, wy, wz}, chunks);
+        d = isVoid({x - 1, y, z + 1}, {wx - 1, wy, wz + 1}, chunks);
+        e = isVoid({x, y, z + 1}, {wx, wy, wz + 1}, chunks);
+        f = isVoid({x + 1, y, z + 1}, {wx + 1, wy, wz + 1}, chunks);
+        g = isVoid({x + 1, y, z}, {wx + 1, wy, wz}, chunks);
+        h = isVoid({x + 1, y, z - 1}, {wx + 1, wy, wz - 1}, chunks);
+    }
+    else if (plane == 'X') {
+        a = isVoid({x, y, z - 1}, {wx, wy, wz - 1}, chunks);
+        b = isVoid({x, y - 1, z - 1}, {wx, wy - 1, wz - 1}, chunks);
+        c = isVoid({x, y - 1, z}, {wx, wy - 1, wz}, chunks);
+        d = isVoid({x, y - 1, z + 1}, {wx, wy - 1, wz + 1}, chunks);
+        e = isVoid({x, y, z + 1}, {wx, wy, wz + 1}, chunks);
+        f = isVoid({x, y + 1, z + 1}, {wx, wy + 1, wz + 1}, chunks);
+        g = isVoid({x, y + 1, z}, {wx, wy + 1, wz}, chunks);
+        h = isVoid({x, y + 1, z - 1}, {wx, wy + 1, wz - 1}, chunks);
+    }
+    else /* (plane == 'Z') */ {
+        a = isVoid({x - 1, y, z}, {wx - 1, wy, wz}, chunks);
+        b = isVoid({x - 1, y - 1, z}, {wx - 1, wy - 1, wz}, chunks);
+        c = isVoid({x, y - 1, z}, {wx, wy - 1, wz}, chunks);
+        d = isVoid({x + 1, y - 1, z}, {wx + 1, wy - 1, wz}, chunks);
+        e = isVoid({x + 1, y, z}, {wx + 1, wy, wz}, chunks);
+        f = isVoid({x + 1, y + 1, z}, {wx + 1, wy + 1, wz}, chunks);
+        g = isVoid({x, y + 1, z}, {wx, wy + 1, wz}, chunks);
+        h = isVoid({x - 1, y + 1, z}, {wx - 1, wy + 1, wz}, chunks);
+    }
+
+    const std::array<uint8_t, 4> ambientOcclusion = {
+            static_cast<uint8_t>(a + b + c),
+            static_cast<uint8_t>(g + h + a),
+            static_cast<uint8_t>(e + f + g),
+            static_cast<uint8_t>(c + d + e)
+    };
+    return ambientOcclusion;
 }
 
 Chunk::Chunk(glm::ivec2 position) : m_vao(0), m_vbo(0), m_position(position), m_verticesCount(0), m_blocks(), m_model(1.f) {
@@ -80,60 +135,72 @@ void Chunk::buildMesh(const std::unordered_map<ChunkId, Chunk*>& chunks) {
 
                 // top face
                 if (isVoid({x, y + 1, z}, {worldX, y + 1, worldZ}, chunks)) {
-                    Vertex v0 = {{x, y + 1, z}, blockId, 0};
-                    Vertex v1 = {{x + 1, y + 1, z}, blockId, 0};
-                    Vertex v2 = {{x + 1, y + 1, z + 1}, blockId, 0};
-                    Vertex v3 = {{x, y + 1, z + 1}, blockId, 0};
+                    auto ao = getAmbientOcclusion({x, y + 1, z}, {worldX, y + 1, worldZ}, chunks, 'Y');
+
+                    Vertex v0 = {{x, y + 1, z}, blockId, 0, ao[0]};
+                    Vertex v1 = {{x + 1, y + 1, z}, blockId, 0, ao[1]};
+                    Vertex v2 = {{x + 1, y + 1, z + 1}, blockId, 0, ao[2]};
+                    Vertex v3 = {{x, y + 1, z + 1}, blockId, 0, ao[3]};
 
                     index = addFace(index, v0, v3, v2, v0, v2, v1);
                 }
 
                 // bottom face
                 if (isVoid({x, y - 1, z}, {worldX, y - 1, worldZ}, chunks)) {
-                    Vertex v0 = {{x, y, z}, blockId, 1};
-                    Vertex v1 = {{x + 1, y, z}, blockId, 1};
-                    Vertex v2 = {{x + 1, y, z + 1}, blockId, 1};
-                    Vertex v3 = {{x, y, z + 1}, blockId, 1};
+                    auto ao = getAmbientOcclusion({x, y - 1, z}, {worldX, y - 1, worldZ}, chunks, 'Y');
+
+                    Vertex v0 = {{x, y, z}, blockId, 1, ao[0]};
+                    Vertex v1 = {{x + 1, y, z}, blockId, 1, ao[1]};
+                    Vertex v2 = {{x + 1, y, z + 1}, blockId, 1, ao[2]};
+                    Vertex v3 = {{x, y, z + 1}, blockId, 1, ao[3]};
 
                     index = addFace(index, v0, v2, v3, v0, v1, v2);
                 }
 
                 // right face
                 if (isVoid({x + 1, y, z}, {worldX + 1, y, worldZ}, chunks)) {
-                    Vertex v0 = {{x + 1, y, z}, blockId, 2};
-                    Vertex v1 = {{x + 1, y + 1, z}, blockId, 2};
-                    Vertex v2 = {{x + 1, y + 1, z + 1}, blockId, 2};
-                    Vertex v3 = {{x + 1, y, z + 1}, blockId, 2};
+                    auto ao = getAmbientOcclusion({x + 1, y, z}, {worldX + 1, y, worldZ}, chunks, 'X');
+
+                    Vertex v0 = {{x + 1, y, z}, blockId, 2, ao[0]};
+                    Vertex v1 = {{x + 1, y + 1, z}, blockId, 2, ao[1]};
+                    Vertex v2 = {{x + 1, y + 1, z + 1}, blockId, 2, ao[2]};
+                    Vertex v3 = {{x + 1, y, z + 1}, blockId, 2, ao[3]};
 
                     index = addFace(index, v0, v1, v2, v0, v2, v3);
                 }
 
                 // left face
                 if (isVoid({x - 1, y, z}, {worldX - 1, y, worldZ}, chunks)) {
-                    Vertex v0 = {{x, y, z}, blockId, 3};
-                    Vertex v1 = {{x, y + 1, z}, blockId, 3};
-                    Vertex v2 = {{x, y + 1, z + 1}, blockId, 3};
-                    Vertex v3 = {{x, y, z + 1}, blockId, 3};
+                    auto ao = getAmbientOcclusion({x - 1, y, z}, {worldX - 1, y, worldZ}, chunks, 'X');
+
+                    Vertex v0 = {{x, y, z}, blockId, 3, ao[0]};
+                    Vertex v1 = {{x, y + 1, z}, blockId, 3, ao[1]};
+                    Vertex v2 = {{x, y + 1, z + 1}, blockId, 3, ao[2]};
+                    Vertex v3 = {{x, y, z + 1}, blockId, 3, ao[3]};
 
                     index = addFace(index, v0, v2, v1, v0, v3, v2);
                 }
 
                 // back face
                 if (isVoid({x, y, z - 1}, {worldX, y, worldZ - 1}, chunks)) {
-                    Vertex v0 = {{x, y, z}, blockId, 4};
-                    Vertex v1 = {{x, y + 1, z}, blockId, 4};
-                    Vertex v2 = {{x + 1, y + 1, z}, blockId, 4};
-                    Vertex v3 = {{x + 1, y, z}, blockId, 4};
+                    auto ao = getAmbientOcclusion({x, y, z - 1}, {worldX, y, worldZ - 1}, chunks, 'Z');
+
+                    Vertex v0 = {{x, y, z}, blockId, 4, ao[0]};
+                    Vertex v1 = {{x, y + 1, z}, blockId, 4, ao[1]};
+                    Vertex v2 = {{x + 1, y + 1, z}, blockId, 4, ao[2]};
+                    Vertex v3 = {{x + 1, y, z}, blockId, 4, ao[3]};
 
                     index = addFace(index, v0, v1, v2, v0, v2, v3);
                 }
 
                 // front face
                 if (isVoid({x, y, z + 1}, {worldX, y, worldZ + 1}, chunks)) {
-                    Vertex v0 = {{x, y, z + 1}, blockId, 5};
-                    Vertex v1 = {{x, y + 1, z + 1}, blockId, 5};
-                    Vertex v2 = {{x + 1, y + 1, z + 1}, blockId, 5};
-                    Vertex v3 = {{x + 1, y, z + 1}, blockId, 5};
+                    auto ao = getAmbientOcclusion({x, y, z + 1}, {worldX, y, worldZ + 1}, chunks, 'Z');
+
+                    Vertex v0 = {{x, y, z + 1}, blockId, 5, ao[0]};
+                    Vertex v1 = {{x, y + 1, z + 1}, blockId, 5, ao[1]};
+                    Vertex v2 = {{x + 1, y + 1, z + 1}, blockId, 5, ao[2]};
+                    Vertex v3 = {{x + 1, y, z + 1}, blockId, 5, ao[3]};
 
                     index = addFace(index, v0, v2, v1, v0, v3, v2);
                 }
@@ -159,8 +226,11 @@ void Chunk::buildMesh(const std::unordered_map<ChunkId, Chunk*>& chunks) {
     glVertexAttribIPointer(2, 1, GL_UNSIGNED_BYTE, sizeof(Vertex), (const void*)offsetof(Vertex, faceId));
     glEnableVertexAttribArray(2);
 
-    LOG_DEBUG("Built mesh with " + std::to_string(m_verticesCount)
-        + " vertices for chunk at position (" + std::to_string(m_position.x) + ' ' + std::to_string(m_position.y) + ')');
+    glVertexAttribIPointer(3, 1, GL_UNSIGNED_BYTE, sizeof(Vertex), (const void*)offsetof(Vertex, aoId));
+    glEnableVertexAttribArray(3);
+
+//    LOG_DEBUG("Built mesh with " + std::to_string(m_verticesCount)
+//        + " vertices for chunk at position (" + std::to_string(m_position.x) + ' ' + std::to_string(m_position.y) + ')');
 }
 
 void Chunk::render(Shader& shader) const {
