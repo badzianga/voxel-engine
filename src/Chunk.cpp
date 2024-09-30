@@ -46,18 +46,13 @@ Chunk::~Chunk() {
 }
 
 void Chunk::generate() {
-    for (int y = 0; y < Chunk::height; ++y) {
-        for (int z = 0; z < Chunk::size; ++z) {
-            for (int x = 0; x < Chunk::size; ++x) {
-                const int worldX = x + m_position.x * Chunk::size;
-                const int worldZ = z + m_position.y * Chunk::size;
-                const glm::vec2 worldPos{ worldX, worldZ };
-                auto localHeight = int(glm::simplex(worldPos * 0.01f) * 32 + 64);
-//                int localHeight = 64;
-
-                // TODO: maybe for loop order like z > x > y would be better
-                // now, lots of localHeights are calculated unnecessarily
-
+    for (int z = 0; z < Chunk::size; ++z) {
+        for (int x = 0; x < Chunk::size; ++x) {
+            const int worldX = x + m_position.x * Chunk::size;
+            const int worldZ = z + m_position.y * Chunk::size;
+            const glm::vec2 worldPos{ worldX, worldZ };
+            auto localHeight = int(glm::simplex(worldPos * 0.01f) * 32 + 64);
+            for (int y = 0; y < localHeight; ++y) {
                 if (y < localHeight) {
                     m_blocks[x + Chunk::size * z + Chunk::area * y] = 1 + y;
                 }
