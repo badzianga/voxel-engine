@@ -7,4 +7,5 @@ struct Vertex {
     BlockId blockId;
     uint8_t faceId;
     uint8_t aoId;
+    uint8_t flipId;
 };

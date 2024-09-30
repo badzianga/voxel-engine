@@ -48,6 +48,7 @@ static std::array<uint8_t, 4> getAmbientOcclusion(const glm::ivec3& localPos, co
     // b a h
     // c   g
     // d e f
+    // TODO: ambient occlusion on some corners works incorrectly (ignores b/d/f/h block), investigate it further
     if (plane == 'Y') {
         a = isVoid({x, y, z - 1}, {wx, wy, wz - 1}, chunks);
         b = isVoid({x - 1, y, z - 1}, {wx - 1, wy, wz - 1}, chunks);
@@ -136,73 +137,97 @@ void Chunk::buildMesh(const std::unordered_map<ChunkId, Chunk*>& chunks) {
                 // top face
                 if (isVoid({x, y + 1, z}, {worldX, y + 1, worldZ}, chunks)) {
                     auto ao = getAmbientOcclusion({x, y + 1, z}, {worldX, y + 1, worldZ}, chunks, 'Y');
+                    uint8_t flipId = ao[1] + ao[3] > ao[0] + ao[2];
 
-                    Vertex v0 = {{x, y + 1, z}, blockId, 0, ao[0]};
-                    Vertex v1 = {{x + 1, y + 1, z}, blockId, 0, ao[1]};
-                    Vertex v2 = {{x + 1, y + 1, z + 1}, blockId, 0, ao[2]};
-                    Vertex v3 = {{x, y + 1, z + 1}, blockId, 0, ao[3]};
+                    Vertex v0 = {{x, y + 1, z}, blockId, 0, ao[0], flipId};
+                    Vertex v1 = {{x + 1, y + 1, z}, blockId, 0, ao[1], flipId};
+                    Vertex v2 = {{x + 1, y + 1, z + 1}, blockId, 0, ao[2], flipId};
+                    Vertex v3 = {{x, y + 1, z + 1}, blockId, 0, ao[3], flipId};
 
-                    index = addFace(index, v0, v3, v2, v0, v2, v1);
+                    if (flipId)
+                        index = addFace(index, v1, v0, v3, v1, v3, v2);
+                    else
+                        index = addFace(index, v0, v3, v2, v0, v2, v1);
                 }
 
                 // bottom face
                 if (isVoid({x, y - 1, z}, {worldX, y - 1, worldZ}, chunks)) {
                     auto ao = getAmbientOcclusion({x, y - 1, z}, {worldX, y - 1, worldZ}, chunks, 'Y');
+                    uint8_t flipId = ao[1] + ao[3] > ao[0] + ao[2];
 
-                    Vertex v0 = {{x, y, z}, blockId, 1, ao[0]};
-                    Vertex v1 = {{x + 1, y, z}, blockId, 1, ao[1]};
-                    Vertex v2 = {{x + 1, y, z + 1}, blockId, 1, ao[2]};
-                    Vertex v3 = {{x, y, z + 1}, blockId, 1, ao[3]};
+                    Vertex v0 = {{x, y, z}, blockId, 1, ao[0], flipId};
+                    Vertex v1 = {{x + 1, y, z}, blockId, 1, ao[1], flipId};
+                    Vertex v2 = {{x + 1, y, z + 1}, blockId, 1, ao[2], flipId};
+                    Vertex v3 = {{x, y, z + 1}, blockId, 1, ao[3], flipId};
 
-                    index = addFace(index, v0, v2, v3, v0, v1, v2);
+                    if (flipId)
+                        index = addFace(index, v1, v3, v0, v1, v2, v3);
+                    else
+                        index = addFace(index, v0, v2, v3, v0, v1, v2);
                 }
 
                 // right face
                 if (isVoid({x + 1, y, z}, {worldX + 1, y, worldZ}, chunks)) {
                     auto ao = getAmbientOcclusion({x + 1, y, z}, {worldX + 1, y, worldZ}, chunks, 'X');
+                    uint8_t flipId = ao[1] + ao[3] > ao[0] + ao[2];
 
-                    Vertex v0 = {{x + 1, y, z}, blockId, 2, ao[0]};
-                    Vertex v1 = {{x + 1, y + 1, z}, blockId, 2, ao[1]};
-                    Vertex v2 = {{x + 1, y + 1, z + 1}, blockId, 2, ao[2]};
-                    Vertex v3 = {{x + 1, y, z + 1}, blockId, 2, ao[3]};
+                    Vertex v0 = {{x + 1, y, z}, blockId, 2, ao[0], flipId};
+                    Vertex v1 = {{x + 1, y + 1, z}, blockId, 2, ao[1], flipId};
+                    Vertex v2 = {{x + 1, y + 1, z + 1}, blockId, 2, ao[2], flipId};
+                    Vertex v3 = {{x + 1, y, z + 1}, blockId, 2, ao[3], flipId};
 
-                    index = addFace(index, v0, v1, v2, v0, v2, v3);
+                    if (flipId)
+                        index = addFace(index, v3, v0, v1, v3, v1, v2);
+                    else
+                        index = addFace(index, v0, v1, v2, v0, v2, v3);
                 }
 
                 // left face
                 if (isVoid({x - 1, y, z}, {worldX - 1, y, worldZ}, chunks)) {
                     auto ao = getAmbientOcclusion({x - 1, y, z}, {worldX - 1, y, worldZ}, chunks, 'X');
+                    uint8_t flipId = ao[1] + ao[3] > ao[0] + ao[2];
 
-                    Vertex v0 = {{x, y, z}, blockId, 3, ao[0]};
-                    Vertex v1 = {{x, y + 1, z}, blockId, 3, ao[1]};
-                    Vertex v2 = {{x, y + 1, z + 1}, blockId, 3, ao[2]};
-                    Vertex v3 = {{x, y, z + 1}, blockId, 3, ao[3]};
+                    Vertex v0 = {{x, y, z}, blockId, 3, ao[0], flipId};
+                    Vertex v1 = {{x, y + 1, z}, blockId, 3, ao[1], flipId};
+                    Vertex v2 = {{x, y + 1, z + 1}, blockId, 3, ao[2], flipId};
+                    Vertex v3 = {{x, y, z + 1}, blockId, 3, ao[3], flipId};
 
-                    index = addFace(index, v0, v2, v1, v0, v3, v2);
+                    if (flipId)
+                        index = addFace(index, v3, v1, v0, v3, v2, v1);
+                    else
+                        index = addFace(index, v0, v2, v1, v0, v3, v2);
                 }
 
                 // back face
                 if (isVoid({x, y, z - 1}, {worldX, y, worldZ - 1}, chunks)) {
                     auto ao = getAmbientOcclusion({x, y, z - 1}, {worldX, y, worldZ - 1}, chunks, 'Z');
+                    uint8_t flipId = ao[1] + ao[3] > ao[0] + ao[2];
 
-                    Vertex v0 = {{x, y, z}, blockId, 4, ao[0]};
-                    Vertex v1 = {{x, y + 1, z}, blockId, 4, ao[1]};
-                    Vertex v2 = {{x + 1, y + 1, z}, blockId, 4, ao[2]};
-                    Vertex v3 = {{x + 1, y, z}, blockId, 4, ao[3]};
+                    Vertex v0 = {{x, y, z}, blockId, 4, ao[0], flipId};
+                    Vertex v1 = {{x, y + 1, z}, blockId, 4, ao[1], flipId};
+                    Vertex v2 = {{x + 1, y + 1, z}, blockId, 4, ao[2], flipId};
+                    Vertex v3 = {{x + 1, y, z}, blockId, 4, ao[3], flipId};
 
-                    index = addFace(index, v0, v1, v2, v0, v2, v3);
+                    if (flipId)
+                        index = addFace(index, v3, v0, v1, v3, v1, v2);
+                    else
+                        index = addFace(index, v0, v1, v2, v0, v2, v3);
                 }
 
                 // front face
                 if (isVoid({x, y, z + 1}, {worldX, y, worldZ + 1}, chunks)) {
                     auto ao = getAmbientOcclusion({x, y, z + 1}, {worldX, y, worldZ + 1}, chunks, 'Z');
+                    uint8_t flipId = ao[1] + ao[3] > ao[0] + ao[2];
 
-                    Vertex v0 = {{x, y, z + 1}, blockId, 5, ao[0]};
-                    Vertex v1 = {{x, y + 1, z + 1}, blockId, 5, ao[1]};
-                    Vertex v2 = {{x + 1, y + 1, z + 1}, blockId, 5, ao[2]};
-                    Vertex v3 = {{x + 1, y, z + 1}, blockId, 5, ao[3]};
+                    Vertex v0 = {{x, y, z + 1}, blockId, 5, ao[0], flipId};
+                    Vertex v1 = {{x, y + 1, z + 1}, blockId, 5, ao[1], flipId};
+                    Vertex v2 = {{x + 1, y + 1, z + 1}, blockId, 5, ao[2], flipId};
+                    Vertex v3 = {{x + 1, y, z + 1}, blockId, 5, ao[3], flipId};
 
-                    index = addFace(index, v0, v2, v1, v0, v3, v2);
+                    if (flipId)
+                        index = addFace(index, v3, v1, v0, v3, v2, v1);
+                    else
+                        index = addFace(index, v0, v2, v1, v0, v3, v2);
                 }
             }
         }
@@ -228,6 +253,9 @@ void Chunk::buildMesh(const std::unordered_map<ChunkId, Chunk*>& chunks) {
 
     glVertexAttribIPointer(3, 1, GL_UNSIGNED_BYTE, sizeof(Vertex), (const void*)offsetof(Vertex, aoId));
     glEnableVertexAttribArray(3);
+
+    glVertexAttribIPointer(4, 1, GL_UNSIGNED_BYTE, sizeof(Vertex), (const void*)offsetof(Vertex, flipId));
+    glEnableVertexAttribArray(4);
 
 //    LOG_DEBUG("Built mesh with " + std::to_string(m_verticesCount)
 //        + " vertices for chunk at position (" + std::to_string(m_position.x) + ' ' + std::to_string(m_position.y) + ')');

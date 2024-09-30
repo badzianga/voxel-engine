@@ -3,6 +3,7 @@ layout (location = 0) in ivec3 a_position;
 layout (location = 1) in int a_blockId;
 layout (location = 2) in int a_faceId;
 layout (location = 3) in int a_aoId;
+layout (location = 4) in int a_flipId;
 
 uniform mat4 u_model;
 uniform mat4 u_view;
@@ -27,9 +28,11 @@ const vec2 uvCoords[4] = vec2[4](
         vec2(0, 0), vec2(0, 1)
 );
 
-const int uvIndices[12] = int[12](
+const int uvIndices[24] = int[24](
         1, 0, 2, 1, 2, 3,  // even face
-        3, 0, 2, 3, 1, 0   // odd face
+        3, 0, 2, 3, 1, 0,  // odd face
+        3, 1, 0, 3, 0, 2,  // even face, flipped
+        1, 2, 3, 1, 0, 2   // odd face, flipped
 );
 
 vec3 hash31(float p) {
@@ -39,7 +42,7 @@ vec3 hash31(float p) {
 }
 
 void main() {
-    int uvIndex = gl_VertexID % 6 + (a_faceId & 1) * 6;
+    int uvIndex = gl_VertexID % 6 + ((a_faceId & 1) + a_flipId * 2) * 6;
     vertexUV = uvCoords[uvIndices[uvIndex]];
 
     vertexShading = faceShading[a_faceId] * aoValues[a_aoId];
