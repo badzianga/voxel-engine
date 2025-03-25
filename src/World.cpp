@@ -7,8 +7,8 @@
 World::World() {
     Timer timer{};
     timer.start();
-    for (int z = -4; z < 4; ++z) {
-        for (int x = -4; x < 4; ++x) {
+    for (int z = -8; z < 8; ++z) {
+        for (int x = -8; x < 8; ++x) {
             glm::ivec2 chunkPos{ x, z };
             addChunk(chunkPos);
         }

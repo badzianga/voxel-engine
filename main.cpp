@@ -22,7 +22,7 @@ constexpr float CAMERA_SPEED = 16.f;
 
 glm::vec3 cameraPos = glm::vec3{ 0.f, 80.f, 0.f };
 glm::vec3 cameraFront = glm::vec3(0.f, 0.f, -1.f);
-const glm::vec3 cameraUp = glm::vec3(0.f, 1.f, 0.f);
+constexpr glm::vec3 cameraUp = glm::vec3(0.f, 1.f, 0.f);
 
 bool firstMouse = true;
 float yaw = -90.f;
@@ -40,7 +40,7 @@ int main() {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "MineCppraft", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Voxel Engine", nullptr, nullptr);
     if (window == nullptr) {
         LOG_CRITICAL("Failed to create GLFW window!");
         glfwTerminate();

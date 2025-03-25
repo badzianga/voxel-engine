@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.26)
-project(MineCppraft)
+project(VoxelEngine)
 
 include(FetchContent)
 
@@ -56,7 +56,7 @@ target_include_directories(imgui
         ${IMGUI_SRC_DIR}/backends
 )
 
-add_executable(MineCppraft main.cpp
+add_executable(VoxelEngine main.cpp
         src/Shader.cpp
         src/QuadMesh.cpp
         src/CubeMesh.cpp
@@ -68,21 +68,11 @@ add_executable(MineCppraft main.cpp
         src/ChunkId.cpp
         src/Logger.cpp)
 
-add_dependencies(MineCppraft glfw)
-add_dependencies(MineCppraft glad)
-add_dependencies(MineCppraft glm)
+add_dependencies(VoxelEngine glfw)
+add_dependencies(VoxelEngine glad)
+add_dependencies(VoxelEngine glm)
 
-target_include_directories(MineCppraft PRIVATE include)
-target_link_libraries(MineCppraft glad glfw glm imgui)
+target_include_directories(VoxelEngine PRIVATE include)
+target_link_libraries(VoxelEngine glad glfw glm imgui)
 
-configure_file(shaders/quad.vert ${CMAKE_CURRENT_BINARY_DIR}/shaders/quad.vert COPYONLY)
-configure_file(shaders/quad.frag ${CMAKE_CURRENT_BINARY_DIR}/shaders/quad.frag COPYONLY)
-
-configure_file(shaders/cube.vert ${CMAKE_CURRENT_BINARY_DIR}/shaders/cube.vert COPYONLY)
-configure_file(shaders/cube.frag ${CMAKE_CURRENT_BINARY_DIR}/shaders/cube.frag COPYONLY)
-
-configure_file(shaders/chunk.vert ${CMAKE_CURRENT_BINARY_DIR}/shaders/chunk.vert COPYONLY)
-configure_file(shaders/chunk.frag ${CMAKE_CURRENT_BINARY_DIR}/shaders/chunk.frag COPYONLY)
-
-configure_file(assets/test.png ${CMAKE_CURRENT_BINARY_DIR}/assets/test.png COPYONLY)
-configure_file(assets/frame.png ${CMAKE_CURRENT_BINARY_DIR}/assets/frame.png COPYONLY)
+file(COPY shaders DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
